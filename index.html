@@ -48,7 +48,7 @@
       let score = 0; // начальное количество очков
       let timeLeft = 120; // время в секундах
 
-      // Функция для создания сфер
+      
       function createSpheres() {
         for (let i = 0; i < numSpheres; i++) {
           const sphere = document.createElement('a-sphere');
@@ -56,12 +56,12 @@
           sphere.setAttribute('color', '#EF2D5E'); // цвет сферы
           sphere.setAttribute('class', 'collectible'); // класс для коллизии
 
-          // Генерация случайных координат
+          
           const x = (Math.random() - 0.5) * 100; // случайное значение от -50 до 50
           const z = (Math.random() - 0.5) * -100; // случайное значение от -50 до 0
           sphere.setAttribute('position', `${x} 1.25 ${z}`);
 
-          // Добавление обработчика события столкновения
+          
           sphere.addEventListener('collide', function (event) {
             if (event.detail.body.el.id === 'player') {
               scene.removeChild(sphere); // Удаление сферы из сцены
@@ -74,7 +74,7 @@
         }
       }
 
-      // Функция для обновления таймера
+      
       function updateTimer() {
         if (timeLeft > 0) {
           timeLeft--;
@@ -85,9 +85,9 @@
         }
       }
 
-      // Запуск игры
-      createSpheres(); // Создание сфер
-      const timerInterval = setInterval(updateTimer, 1000); // Обновление таймера каждую секунду
+      
+      createSpheres(); 
+      const timerInterval = setInterval(updateTimer, 1000); 
 
     </script>
 

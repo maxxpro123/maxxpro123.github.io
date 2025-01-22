@@ -8,50 +8,22 @@
 <body>
   <a-scene>
     <a-assets>
-    <img id="sky" src="sky.png">
-    <img id="ground" src="ground.jpg">
+      <img id="sky" src="sky.png">
+      <img id="ground" src="ground.jpg">
     </a-assets>
-    <!-- Небо -->
-    <a-sky src ="#sky"></a-sky>
-
     
+    <!-- Небо -->
+    <a-sky src="#sky"></a-sky>
+
     <a-camera position="0 1.6 0"></a-camera>
-    <a-entity camera look-controls wasd-controls="acceleration:100" position="0 1.6 0"></a-entity>
     
     <!-- Пол -->
-    <a-plane src ="#ground"
+    <a-plane src="#ground"
       position="0 0 -4" 
       rotation="-90 0 0" 
       width="100" 
       height="100">
     </a-plane>
-
-    <!-- Камера и контроллер -->
-    <a-entity 
-      camera 
-      look-controls 
-      position="0 1.6 0">
-    </a-entity>
-
-    <!-- Объекты для сбора -->
-    <a-box 
-      position="-1 0.5 -3" 
-      rotation="0 45 45" 
-      color="#4CC3D9">
-    </a-box>
-
-    <a-sphere 
-      position="1 1.25 -5" 
-      radius="1.25" 
-      color="#EF2D5E">
-    </a-sphere>
-
-    <a-cylinder 
-      position="0 0.75 -5" 
-      radius="0.5" 
-      height="1.5" 
-      color="#FFC65D">
-    </a-cylinder>
 
     <!-- Текст для отображения счета -->
     <a-text 
@@ -67,10 +39,26 @@
       position="1.5 2.5 -5" 
       color="black">
     </a-text>
-  </a-scene>
 
-  <script>
-    // Ваш JavaScript код для логики игры
-  </script>
+    <!-- Объекты для сбора (сферы) -->
+    <script>
+      const numSpheres = 20; // количество сфер
+      const scene = document.querySelector('a-scene');
+
+      for (let i = 0; i < numSpheres; i++) {
+        const sphere = document.createElement('a-sphere');
+        sphere.setAttribute('radius', '0.5'); // радиус сферы
+        sphere.setAttribute('color', '#EF2D5E'); // цвет сферы
+
+        // Генерация случайных координат
+        const x = (Math.random() - 0.5) * 100; // случайное значение от -50 до 50
+        const z = (Math.random() - 0.5) * -100; // случайное значение от -50 до 0
+        sphere.setAttribute('position', `${x} 1.25 ${z}`);
+
+        scene.appendChild(sphere); // добавление сферы в сцену
+      }
+    </script>
+    
+  </a-scene>
 </body>
 </html>

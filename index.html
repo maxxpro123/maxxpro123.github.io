@@ -38,7 +38,7 @@
     <a-text 
       id="scoreText" 
       value="Score: 0" 
-      position="0 2.5 -5" 
+      position="0 2 -5" 
       color="black" 
       align="center">
     </a-text>
@@ -47,7 +47,7 @@
     <a-text 
       id="timerText" 
       value="Time: 120" 
-      position="0 2 -5" 
+      position="0 1.5 -5" 
       color="black" 
       align="center">
     </a-text>
@@ -84,25 +84,18 @@
       }
     }
 
-    // Функция для проверки столкновений
-    function checkCollisions() {
-      const cameraPosition = camera.object3D.position;
+    // Функция для проверки столкновений при наведении на контроллер
+    function checkPickup(controller) {
+      const controllerEl = document.querySelector(controller);
+      const intersectedEl = controllerEl.components.raycaster.intersections[0];
 
-      spheres.forEach((sphere, index) => {
-        if (!sphere) return;
-
-        const spherePosition = sphere.object3D.position;
-
-        // Проверяем расстояние между камерой и сферой
-        const distance = cameraPosition.distanceTo(spherePosition);
-
-        if (distance < 1) { // если расстояние меньше радиуса взаимодействия
-          score++;
-          scoreText.setAttribute('value', `Score: ${score}`);
-          scene.removeChild(sphere); // удаляем сферу из сцены
-          spheres[index] = null; // удаляем сферу из массива
-        }
-      });
+      if (intersectedEl && intersectedEl.object.el.classList.contains('collectible')) {
+        const sphere = intersectedEl.object.el;
+        score++;
+        scoreText.setAttribute('value', `Score: ${score}`);
+        scene.removeChild(sphere); // удаляем сферу из сцены
+        spheres.splice(spheres.indexOf(sphere), 1); // удаляем сферу из массива
+      }
     }
 
     // Функция для обновления таймера
@@ -121,7 +114,8 @@
 
     // Обновление логики игры каждый кадр
     scene.addEventListener('tick', () => {
-      checkCollisions();
+      checkPickup('#left-controller');
+      checkPickup('#right-controller');
     });
 
     // Запуск таймера

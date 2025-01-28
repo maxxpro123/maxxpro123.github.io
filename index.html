@@ -20,7 +20,7 @@
     <a-sky src="#sky"></a-sky>
 
     <!-- Камера и контроллер -->
-    <a-entity camera look-controls wasd-controls="acceleration:100" position="0 1.6 0"></a-entity>
+    <a-entity id="camera" camera look-controls wasd-controls position="0 1.6 0"></a-entity>
 
     <!-- Пол -->
     <a-plane src="#ground"
@@ -29,15 +29,6 @@
       width="100" 
       height="100">
     </a-plane>
-
-    <!-- Объекты для сбора -->
-    <a-box 
-      position="-1 0.5 -3" 
-      rotation="0 45 45" 
-      color="#4CC3D9">
-    </a-box>
-
-    <!-- Сферы будут добавлены динамически -->
 
     <!-- Счетчик очков -->
     <a-text 
@@ -52,8 +43,9 @@
     <a-text 
       id="timerText" 
       value="Time: 120" 
-      position="1.5 2.5 -5" 
-      color="black">
+      position="0 2 -5" 
+      color="black" 
+      align="center">
     </a-text>
     
   </a-scene>
@@ -66,6 +58,9 @@
     let timeLeft = 120; // время в секундах
     const scoreText = document.getElementById('scoreText');
     const timerText = document.getElementById('timerText');
+    const camera = document.getElementById('camera');
+
+    const spheres = []; // массив для хранения сфер
 
     // Функция для создания сфер
     function createSpheres() {
@@ -75,22 +70,34 @@
         sphere.setAttribute('color', '#EF2D5E'); // цвет сферы
         
         // Генерация случайных координат
-        const x = (Math.random() - 0.5) * 100; // случайное значение от -50 до 50
-        const z = (Math.random() - 0.5) * -100; // случайное значение от -50 до 0
+        const x = (Math.random() - 0.5) * 50; // случайное значение от -25 до 25
+        const z = (Math.random() - 0.5) * -50; // случайное значение от -25 до -50
         sphere.setAttribute('position', `${x} 1.25 ${z}`);
         
-        // Добавление обработчика столкновений
-        sphere.setAttribute('dynamic-body', ''); // добавляем физику к сфере
-        sphere.addEventListener('collide', function (e) {
-          if (e.detail.body.el.tagName === 'A-ENTITY' && e.detail.body.el.hasAttribute('camera')) {
-            score++;
-            scoreText.setAttribute('value', `Score: ${score}`);
-            scene.removeChild(sphere); // удаляем сферу после сбора
-          }
-        });
-
         scene.appendChild(sphere); // добавление сферы в сцену
+        spheres.push(sphere); // добавляем сферу в массив
       }
+    }
+
+    // Функция для проверки столкновений
+    function checkCollisions() {
+      const cameraPosition = camera.object3D.position;
+
+      spheres.forEach((sphere, index) => {
+        if (!sphere) return;
+
+        const spherePosition = sphere.object3D.position;
+        
+        // Проверяем расстояние между камерой и сферой
+        const distance = cameraPosition.distanceTo(spherePosition);
+
+        if (distance < 1) { // если расстояние меньше радиуса взаимодействия
+          score++;
+          scoreText.setAttribute('value', `Score: ${score}`);
+          scene.removeChild(sphere); // удаляем сферу из сцены
+          spheres[index] = null; // удаляем сферу из массива
+        }
+      });
     }
 
     // Функция для обновления таймера
@@ -106,7 +113,12 @@
 
     // Запуск игры
     createSpheres();
-    
+
+    // Обновление логики игры каждый кадр
+    scene.addEventListener('tick', () => {
+      checkCollisions();
+    });
+
     // Запуск таймера
     const timerInterval = setInterval(updateTimer, 1000);
     

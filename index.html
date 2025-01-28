@@ -15,7 +15,7 @@
       <img id="sky" src="sky.png">
       <img id="ground" src="ground.jpg">
     </a-assets>
-    
+
     <!-- Небо -->
     <a-sky src="#sky"></a-sky>
 
@@ -47,13 +47,13 @@
       color="black" 
       align="center">
     </a-text>
-    
+
   </a-scene>
 
   <script>
     const numSpheres = 20; // количество сфер
     const scene = document.querySelector('a-scene');
-    
+
     let score = 0;
     let timeLeft = 120; // время в секундах
     const scoreText = document.getElementById('scoreText');
@@ -61,6 +61,7 @@
     const camera = document.getElementById('camera');
 
     const spheres = []; // массив для хранения сфер
+    const pickupRadius = 2; // радиус подбора
 
     // Функция для создания сфер
     function createSpheres() {
@@ -68,30 +69,31 @@
         const sphere = document.createElement('a-sphere');
         sphere.setAttribute('radius', '0.5'); // радиус сферы
         sphere.setAttribute('color', '#EF2D5E'); // цвет сферы
-        
+
         // Генерация случайных координат
         const x = (Math.random() - 0.5) * 50; // случайное значение от -25 до 25
         const z = (Math.random() - 0.5) * -50; // случайное значение от -25 до -50
         sphere.setAttribute('position', `${x} 1.25 ${z}`);
-        
+
         scene.appendChild(sphere); // добавление сферы в сцену
         spheres.push(sphere); // добавляем сферу в массив
       }
     }
 
-    // Функция для проверки столкновений
-    function checkCollisions() {
+    // Функция для проверки подбора сфер
+    function checkPickup() {
       const cameraPosition = camera.object3D.position;
 
       spheres.forEach((sphere, index) => {
         if (!sphere) return;
 
         const spherePosition = sphere.object3D.position;
-        
+
         // Проверяем расстояние между камерой и сферой
         const distance = cameraPosition.distanceTo(spherePosition);
 
-        if (distance < 1) { // если расстояние меньше радиуса взаимодействия
+        // Проверяем, находится ли сфера в радиусе подбора
+        if (distance < pickupRadius) {
           score++;
           scoreText.setAttribute('value', `Score: ${score}`);
           scene.removeChild(sphere); // удаляем сферу из сцены
@@ -116,12 +118,12 @@
 
     // Обновление логики игры каждый кадр
     scene.addEventListener('tick', () => {
-      checkCollisions();
+      checkPickup();
     });
 
     // Запуск таймера
     const timerInterval = setInterval(updateTimer, 1000);
-    
+
   </script>
 </body>
 </html>

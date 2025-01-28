@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>VR Mini Game</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdn.rawgit.com/donmccurdy/aframe-gamepad-controls/master/dist/aframe-gamepad-controls.min.js"></script>
   <style>
     body { margin: 0; }
     a-scene { width: 100%; height: 100%; }
@@ -22,9 +23,9 @@
     <!-- Камера -->
     <a-entity id="camera" camera look-controls position="0 1.6 0"></a-entity>
 
-    <!-- Контроллеры -->
-    <a-entity id="left-controller" oculus-touch-controls="hand: left" raycaster="objects: .collectible" teleport></a-entity>
-    <a-entity id="right-controller" oculus-touch-controls="hand: right" raycaster="objects: .collectible" teleport></a-entity>
+    <!-- Контроллеры с поддержкой перемещения -->
+    <a-entity id="left-controller" oculus-touch-controls="hand: left" gamepad-controls></a-entity>
+    <a-entity id="right-controller" oculus-touch-controls="hand: right" gamepad-controls></a-entity>
 
     <!-- Пол -->
     <a-plane src="#ground"
@@ -62,7 +63,6 @@
     let timeLeft = 120; // время в секундах
     const scoreText = document.getElementById('scoreText');
     const timerText = document.getElementById('timerText');
-    const camera = document.getElementById('camera');
 
     const spheres = []; // массив для хранения сфер
 
@@ -84,7 +84,7 @@
       }
     }
 
-    // Функция для проверки столкновений при наведении на контроллер
+    // Функция для проверки подбора сфер через контроллеры
     function checkPickup(controller) {
       const controllerEl = document.querySelector(controller);
       const intersectedEl = controllerEl.components.raycaster.intersections[0];
@@ -116,6 +116,18 @@
     scene.addEventListener('tick', () => {
       checkPickup('#left-controller');
       checkPickup('#right-controller');
+      
+      const leftController = document.querySelector('#left-controller');
+      const rightController = document.querySelector('#right-controller');
+
+      // Получаем значения джойстиков для перемещения
+      const leftJoystick = leftController.components['gamepad-controls'].gamepad.axes;
+      const rightJoystick = rightController.components['gamepad-controls'].gamepad.axes;
+
+      // Перемещение камеры по оси X и Z на основе значений джойстика
+      camera.object3D.position.x += leftJoystick[0] * 0.1; // X ось
+      camera.object3D.position.z += leftJoystick[1] * -0.1; // Z ось (инвертируем, так как Z направлен назад)
+      
     });
 
     // Запуск таймера

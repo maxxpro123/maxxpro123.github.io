@@ -14,7 +14,10 @@
     
     <!-- Небо -->
     <a-sky src="#sky"></a-sky>
-    
+
+    <!-- Камера и контроллер -->
+    <a-entity camera look-controls wasd-controls="acceleration:100" position="0 1.6 0"></a-entity>
+
     <!-- Пол -->
     <a-plane src="#ground"
       position="0 0 -4" 
@@ -23,16 +26,26 @@
       height="100">
     </a-plane>
 
-    <a-entity 
-         id='scene-camera'
-         camera="userHeight: 1.6" 
-         position='24 1.6 14'  
-         universal-controls='movementControls: universal-gear-vr, keyboard;' 
-         universal-gearvr-controls>
-    
+    <!-- Объекты для сбора -->
+    <a-box 
+      position="-1 0.5 -3" 
+      rotation="0 45 45" 
+      color="#4CC3D9">
+    </a-box>
+    <a-sphere 
+      position="1 1.25 -5" 
+      radius="1.25" 
+      color="#EF2D5E">
+    </a-sphere>
+    <a-cylinder 
+      position="0 0.75 -5" 
+      radius="0.5" 
+      height="1.5" 
+      color="#FFC65D">
+    </a-cylinder>
+
     <!-- Текст для отображения счета -->
     <a-text 
-      id="scoreText"
       value="Score: 0" 
       position="-1.5 2.5 -5" 
       color="black">
@@ -41,61 +54,30 @@
     <!-- Таймер -->
     <a-text 
       id="timer" 
-      value="Time: 120" 
+      value="Time: 60" 
       position="1.5 2.5 -5" 
       color="black">
     </a-text>
-
-    <!-- Объекты для сбора (сферы) -->
-    <script>
-      const numSpheres = 20; // количество сфер
-      const scene = document.querySelector('a-scene');
-      let score = 0; // начальное количество очков
-      let timeLeft = 120; // время в секундах
-
-      
-      function createSpheres() {
-        for (let i = 0; i < numSpheres; i++) {
-          const sphere = document.createElement('a-sphere');
-          sphere.setAttribute('radius', '0.5'); // радиус сферы
-          sphere.setAttribute('color', '#EF2D5E'); // цвет сферы
-          sphere.setAttribute('class', 'collectible'); // класс для коллизии
-
-          
-          const x = (Math.random() - 0.5) * 100; // случайное значение от -50 до 50
-          const z = (Math.random() - 0.5) * -100; // случайное значение от -50 до 0
-          sphere.setAttribute('position', `${x} 1.25 ${z}`);
-
-          
-          sphere.addEventListener('collide', function (event) {
-            if (event.detail.body.el.id === 'player') {
-              scene.removeChild(sphere); // Удаление сферы из сцены
-              score++; // Увеличение счета
-              document.getElementById('scoreText').setAttribute('value', `Score: ${score}`); // Обновление текста счета
-            }
-          });
-
-          scene.appendChild(sphere); // добавление сферы в сцену
-        }
-      }
-
-      
-      function updateTimer() {
-        if (timeLeft > 0) {
-          timeLeft--;
-          document.getElementById('timer').setAttribute('value', `Time: ${timeLeft}`);
-        } else {
-          clearInterval(timerInterval);
-          alert("Время вышло! Ваш счет: " + score);
-        }
-      }
-
-      
-      createSpheres(); 
-      const timerInterval = setInterval(updateTimer, 1000); 
-
-    </script>
-
+    
   </a-scene>
+
+  <script>
+    // Ваш JavaScript код для логики игры
+    const numSpheres = 20; // количество сфер
+    const scene = document.querySelector('a-scene');
+    
+    for (let i = 0; i < numSpheres; i++) {
+      const sphere = document.createElement('a-sphere');
+      sphere.setAttribute('radius', '0.5'); // радиус сферы
+      sphere.setAttribute('color', '#EF2D5E'); // цвет сферы
+      
+      // Генерация случайных координат
+      const x = (Math.random() - 0.5) * 100; // случайное значение от -50 до 50
+      const z = (Math.random() - 0.5) * -100; // случайное значение от -50 до 0
+      sphere.setAttribute('position', `${x} 1.25 ${z}`);
+      
+      scene.appendChild(sphere); // добавление сферы в сцену
+    }
+  </script>
 </body>
 </html>

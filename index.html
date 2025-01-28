@@ -2,9 +2,8 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>VR Camera and Controller</title>
+  <title>VR Movement with Pico Controllers</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://cdn.rawgit.com/donmccurdy/aframe-gamepad-controls/master/dist/aframe-gamepad-controls.min.js"></script>
   <style>
     body { margin: 0; }
     a-scene { width: 100%; height: 100%; }
@@ -12,125 +11,65 @@
 </head>
 <body>
   <a-scene>
-    <a-assets>
-      <img id="sky" src="sky.png">
-      <img id="ground" src="ground.jpg">
-    </a-assets>
+    <!-- Игрок -->
+    <a-entity id="player" position="0 1.6 0">
+      <!-- Камера -->
+      <a-entity camera look-controls></a-entity>
 
-    <!-- Небо -->
-    <a-sky src="#sky"></a-sky>
+      <!-- Левый контроллер: перемещение -->
+      <a-entity 
+        pico-controls="hand: left" 
+        thumbstick-movement></a-entity>
 
-    <!-- Контроллеры -->
-    <!-- Левый контроллер -->
-    <a-entity id="left-controller" oculus-touch-controls="hand: left" gamepad-controls position="0 1.6 0">
-      <!-- Привязываем камеру к левому контроллеру -->
-      <a-camera position="0 0 0"></a-camera>
+      <!-- Правый контроллер: взаимодействие через raycaster -->
+      <a-entity 
+        pico-controls="hand: right" 
+        raycaster="objects: .collidable; showLine: true;"></a-entity>
     </a-entity>
 
-    <!-- Правый контроллер -->
-    <a-entity id="right-controller" oculus-touch-controls="hand: right" gamepad-controls position="0 1.6 0"></a-entity>
+    <!-- Пример объекта для взаимодействия -->
+    <a-entity 
+      class="collidable" 
+      geometry="primitive: box" 
+      material="color: red" 
+      position="0 1 -3">
+    </a-entity>
 
     <!-- Пол -->
-    <a-plane id="ground" src="#ground"
-      position="0 0 -4" 
-      rotation="-90 0 0" 
-      width="100" 
-      height="100">
-    </a-plane>
-
-    <!-- Счетчик очков -->
-    <a-text 
-      id="scoreText" 
-      value="Score: 0" 
-      position="0 2 -5" 
-      color="black" 
-      align="center">
-    </a-text>
-
-    <!-- Таймер -->
-    <a-text 
-      id="timerText" 
-      value="Time: 120" 
-      position="0 1.5 -5" 
-      color="black" 
-      align="center">
-    </a-text>
-
+    <a-plane position="0 0 -4" rotation="-90 0 0" width="100" height="100" color="#7BC8A4"></a-plane>
   </a-scene>
 
   <script>
-    const numSpheres = 20; // количество сфер
-    const scene = document.querySelector('a-scene');
+    // Компонент для перемещения с помощью джойстика
+    AFRAME.registerComponent('thumbstick-movement', {
+      init: function () {
+        this.el.addEventListener('thumbstickmoved', (evt) => {
+          const player = document.querySelector('#player').object3D;
 
-    let score = 0;
-    let timeLeft = 120; // время в секундах
-    const scoreText = document.getElementById('scoreText');
-    const timerText = document.getElementById('timerText');
+          // Получаем направление движения вперед
+          const direction = new THREE.Vector3();
+          player.getWorldDirection(direction);
+          direction.y = 0; // Игнорируем вертикальное движение
+          direction.normalize();
 
-    const spheres = []; // массив для хранения сфер
+          // Получаем направление движения вправо
+          const right = new THREE.Vector3();
+          player.getWorldDirection(right);
+          right.applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2); // Поворачиваем на 90 градусов
+          right.normalize();
 
-    // Функция для создания сфер
-    function createSpheres() {
-      for (let i = 0; i < numSpheres; i++) {
-        const sphere = document.createElement('a-sphere');
-        sphere.setAttribute('class', 'collectible'); // добавляем класс для распознавания
-        sphere.setAttribute('radius', '0.5'); // радиус сферы
-        sphere.setAttribute('color', '#EF2D5E'); // цвет сферы
+          // Рассчитываем движение вперед/назад и влево/вправо
+          const forwardMovement = direction.multiplyScalar(evt.detail.y * 0.1); // Скорость по оси Y джойстика
+          const rightMovement = right.multiplyScalar(evt.detail.x * 0.1); // Скорость по оси X джойстика
 
-        // Генерация случайных координат
-        const x = (Math.random() - 0.5) * 50; // случайное значение от -25 до 25
-        const z = (Math.random() - 0.5) * -50; // случайное значение от -25 до -50
-        sphere.setAttribute('position', `${x} 1.25 ${z}`);
+          // Суммируем движения
+          const movement = forwardMovement.add(rightMovement);
 
-        scene.appendChild(sphere); // добавление сферы в сцену
-        spheres.push(sphere); // добавляем сферу в массив
+          // Применяем движение к позиции игрока
+          player.position.add(movement);
+        });
       }
-    }
-
-    // Функция для проверки подбора сфер через контроллеры
-    function checkPickup(controller) {
-      const controllerEl = document.querySelector(controller);
-      if (!controllerEl.components.raycaster) return;
-
-      const intersectedEl = controllerEl.components.raycaster.intersections[0];
-
-      if (intersectedEl && intersectedEl.object.el.classList.contains('collectible')) {
-        const sphere = intersectedEl.object.el;
-        score++;
-        scoreText.setAttribute('value', `Score: ${score}`);
-        scene.removeChild(sphere); // удаляем сферу из сцены
-        spheres.splice(spheres.indexOf(sphere), 1); // удаляем сферу из массива
-      }
-    }
-
-    // Функция для обновления таймера
-    function updateTimer() {
-      if (timeLeft > 0) {
-        timeLeft--;
-        timerText.setAttribute('value', `Time: ${timeLeft}`);
-      } else {
-        clearInterval(timerInterval);
-        alert("Время вышло! Игра окончена.");
-      }
-    }
-
-    // Запуск игры
-    createSpheres();
-
-    // Обновление логики игры каждый кадр
-    scene.addEventListener('tick', () => {
-      checkPickup('#left-controller');
-      checkPickup('#right-controller');
-      
-      // Привязка камеры к левому контроллеру (можно также добавить аналогичную логику для правого)
-      const leftControllerPos = document.querySelector('#left-controller').object3D.position;
-      document.querySelector('#camera').object3D.position.copy(leftControllerPos);
-      
     });
-
-    // Запуск таймера
-    const timerInterval = setInterval(updateTimer, 1000);
-    
   </script>
 </body>
 </html>

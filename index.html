@@ -4,6 +4,10 @@
   <meta charset="utf-8">
   <title>VR Mini Game</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <style>
+    body { margin: 0; }
+    a-scene { width: 100%; height: 100%; }
+  </style>
 </head>
 <body>
   <a-scene>
@@ -26,18 +30,28 @@
       height="100">
     </a-plane>
 
+    <!-- Объекты для сбора -->
+    <a-box 
+      position="-1 0.5 -3" 
+      rotation="0 45 45" 
+      color="#4CC3D9">
+    </a-box>
 
-    <!-- Текст для отображения счета -->
+    <!-- Сферы будут добавлены динамически -->
+
+    <!-- Счетчик очков -->
     <a-text 
+      id="scoreText" 
       value="Score: 0" 
-      position="-1.5 2.5 -5" 
-      color="black">
+      position="0 2.5 -5" 
+      color="black" 
+      align="center">
     </a-text>
 
     <!-- Таймер -->
     <a-text 
-      id="timer" 
-      value="Time: 60" 
+      id="timerText" 
+      value="Time: 120" 
       position="1.5 2.5 -5" 
       color="black">
     </a-text>
@@ -45,22 +59,57 @@
   </a-scene>
 
   <script>
-    // Ваш JavaScript код для логики игры
     const numSpheres = 20; // количество сфер
     const scene = document.querySelector('a-scene');
     
-    for (let i = 0; i < numSpheres; i++) {
-      const sphere = document.createElement('a-sphere');
-      sphere.setAttribute('radius', '0.5'); // радиус сферы
-      sphere.setAttribute('color', '#EF2D5E'); // цвет сферы
-      
-      // Генерация случайных координат
-      const x = (Math.random() - 0.5) * 100; // случайное значение от -50 до 50
-      const z = (Math.random() - 0.5) * -100; // случайное значение от -50 до 0
-      sphere.setAttribute('position', `${x} 1.25 ${z}`);
-      
-      scene.appendChild(sphere); // добавление сферы в сцену
+    let score = 0;
+    let timeLeft = 120; // время в секундах
+    const scoreText = document.getElementById('scoreText');
+    const timerText = document.getElementById('timerText');
+
+    // Функция для создания сфер
+    function createSpheres() {
+      for (let i = 0; i < numSpheres; i++) {
+        const sphere = document.createElement('a-sphere');
+        sphere.setAttribute('radius', '0.5'); // радиус сферы
+        sphere.setAttribute('color', '#EF2D5E'); // цвет сферы
+        
+        // Генерация случайных координат
+        const x = (Math.random() - 0.5) * 100; // случайное значение от -50 до 50
+        const z = (Math.random() - 0.5) * -100; // случайное значение от -50 до 0
+        sphere.setAttribute('position', `${x} 1.25 ${z}`);
+        
+        // Добавление обработчика столкновений
+        sphere.setAttribute('dynamic-body', ''); // добавляем физику к сфере
+        sphere.addEventListener('collide', function (e) {
+          if (e.detail.body.el.tagName === 'A-ENTITY' && e.detail.body.el.hasAttribute('camera')) {
+            score++;
+            scoreText.setAttribute('value', `Score: ${score}`);
+            scene.removeChild(sphere); // удаляем сферу после сбора
+          }
+        });
+
+        scene.appendChild(sphere); // добавление сферы в сцену
+      }
     }
+
+    // Функция для обновления таймера
+    function updateTimer() {
+      if (timeLeft > 0) {
+        timeLeft--;
+        timerText.setAttribute('value', `Time: ${timeLeft}`);
+      } else {
+        clearInterval(timerInterval);
+        alert("Время вышло! Игра окончена.");
+      }
+    }
+
+    // Запуск игры
+    createSpheres();
+    
+    // Запуск таймера
+    const timerInterval = setInterval(updateTimer, 1000);
+    
   </script>
 </body>
 </html>

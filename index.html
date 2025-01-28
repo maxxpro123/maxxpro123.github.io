@@ -15,12 +15,16 @@
       <img id="sky" src="sky.png">
       <img id="ground" src="ground.jpg">
     </a-assets>
-    
+
     <!-- Небо -->
     <a-sky src="#sky"></a-sky>
 
-    <!-- Камера и контроллер -->
-    <a-entity id="camera" camera look-controls wasd-controls position="0 1.6 0"></a-entity>
+    <!-- Камера -->
+    <a-entity id="camera" camera look-controls position="0 1.6 0"></a-entity>
+
+    <!-- Контроллеры -->
+    <a-entity id="left-controller" oculus-touch-controls="hand: left" raycaster="objects: .collectible" teleport></a-entity>
+    <a-entity id="right-controller" oculus-touch-controls="hand: right" raycaster="objects: .collectible" teleport></a-entity>
 
     <!-- Пол -->
     <a-plane src="#ground"
@@ -47,13 +51,13 @@
       color="black" 
       align="center">
     </a-text>
-    
+
   </a-scene>
 
   <script>
     const numSpheres = 20; // количество сфер
     const scene = document.querySelector('a-scene');
-    
+
     let score = 0;
     let timeLeft = 120; // время в секундах
     const scoreText = document.getElementById('scoreText');
@@ -66,14 +70,15 @@
     function createSpheres() {
       for (let i = 0; i < numSpheres; i++) {
         const sphere = document.createElement('a-sphere');
+        sphere.setAttribute('class', 'collectible'); // добавляем класс для распознавания
         sphere.setAttribute('radius', '0.5'); // радиус сферы
         sphere.setAttribute('color', '#EF2D5E'); // цвет сферы
-        
+
         // Генерация случайных координат
         const x = (Math.random() - 0.5) * 50; // случайное значение от -25 до 25
         const z = (Math.random() - 0.5) * -50; // случайное значение от -25 до -50
         sphere.setAttribute('position', `${x} 1.25 ${z}`);
-        
+
         scene.appendChild(sphere); // добавление сферы в сцену
         spheres.push(sphere); // добавляем сферу в массив
       }
@@ -87,7 +92,7 @@
         if (!sphere) return;
 
         const spherePosition = sphere.object3D.position;
-        
+
         // Проверяем расстояние между камерой и сферой
         const distance = cameraPosition.distanceTo(spherePosition);
 

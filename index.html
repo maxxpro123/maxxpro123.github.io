@@ -22,7 +22,6 @@
 
     <!-- Камера и прицел -->
     <a-entity camera look-controls wasd-controls="acceleration:100" position="0 1.6 0">
-      <!-- Прицел -->
       <a-entity 
         cursor="rayOrigin: entity" 
         raycaster="objects: a-sphere; far: 100" 
@@ -85,6 +84,32 @@
       }
     }
 
+    // Создание маленьких сфер при исчезновении
+    function createSmallSpheres(position) {
+      for (let i = 0; i < 10; i++) {
+        const smallSphere = document.createElement('a-sphere');
+        smallSphere.setAttribute('radius', '0.1'); // радиус маленькой сферы
+        smallSphere.setAttribute('color', '#EF2D5E'); // цвет маленькой сферы
+        
+        // Генерация случайного направления и скорости
+        const angle = Math.random() * Math.PI * 2;
+        const speedX = Math.cos(angle) * (Math.random() * 2 + 1);
+        const speedZ = Math.sin(angle) * (Math.random() * 2 + 1);
+        
+        smallSphere.setAttribute('position', position);
+        
+        // Анимация движения маленькой сферы
+        smallSphere.setAttribute('animation', `property: position; to: ${position[0] + speedX} ${position[1]} ${position[2] + speedZ}; dur: ${Math.random() * 1000 + 500}; easing: easeInQuad;`);
+        
+        scene.appendChild(smallSphere); // добавление маленькой сферы в сцену
+        
+        // Удаление маленькой сферы через некоторое время
+        setTimeout(() => {
+          scene.removeChild(smallSphere);
+        }, Math.random() * 1000 + 500);
+      }
+    }
+
     // Проверка пересечения прицела с сферами
     function checkIntersections() {
       const cursor = document.querySelector('[cursor]');
@@ -94,7 +119,13 @@
         if (intersection.object.el.tagName === 'A-SPHERE') {
           score++;
           scoreText.setAttribute('value', `Score: ${score}`);
-          scene.removeChild(intersection.object.el); // удаляем сферу после попадания
+          
+          const position = intersection.object.el.getAttribute('position');
+          
+          // Создание маленьких сфер перед удалением основной сферы
+          createSmallSpheres([position.x, position.y, position.z]);
+          
+          scene.removeChild(intersection.object.el); // удаляем основную сферу после попадания
         }
       });
     }
@@ -118,6 +149,7 @@
 
     // Проверка пересечений каждые 100 мс
     setInterval(checkIntersections, 100);
+    
   </script>
 </body>
 </html>

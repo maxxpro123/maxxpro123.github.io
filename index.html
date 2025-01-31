@@ -21,14 +21,11 @@
     <!-- Небо -->
     <a-sky src="#sky"></a-sky>
 
-    <!-- Камера и курсор -->
-    <a-entity camera look-controls wasd-controls="acceleration:100" position="0 1.6 0">
-      <a-entity cursor="rayOrigin: mouse"
-                raycaster="objects: a-sphere"
-                position="0 0 -1"
-                geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-                material="color: black; shader: flat">
-      </a-entity>
+    <!-- Камера -->
+    <a-entity id="camera" camera look-controls wasd-controls="acceleration:100" position="0 1.6 0">
+      <!-- Прицел в центре экрана -->
+      <a-entity position="0 0 -1" geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
+                material="color: black; shader: flat"></a-entity>
     </a-entity>
 
     <!-- Пол -->
@@ -87,23 +84,6 @@
         // Добавление физики к сфере
         sphere.setAttribute('dynamic-body', '');
 
-        // Добавление обработчика hover
-        sphere.addEventListener('mouseenter', function () {
-          score++;
-          scoreText.setAttribute('value', `Score: ${score}`);
-
-          // Эффект частиц при исчезновении
-          const explosion = document.getElementById('explosion');
-          explosion.setAttribute('position', sphere.getAttribute('position'));
-          explosion.setAttribute('particle-system', 'preset: explosion; color: yellow');
-          explosion.components['particle-system'].start();
-
-          // Удаляем сферу через небольшой промежуток времени
-          setTimeout(() => {
-            scene.removeChild(sphere);
-          }, 100); // Задержка для отображения эффекта частиц
-        });
-
         scene.appendChild(sphere); // добавление сферы в сцену
       }
     }
@@ -119,11 +99,52 @@
       }
     }
 
+    // Функция для проверки пересечения луча с объектами
+    function checkIntersection() {
+      const camera = document.getElementById('camera');
+      const raycaster = new THREE.Raycaster();
+      const direction = new THREE.Vector3(0, 0, -1); // Направление луча (вперед из камеры)
+
+      // Получаем позицию и направление камеры
+      const cameraWorldDirection = new THREE.Vector3();
+      camera.object3D.getWorldDirection(cameraWorldDirection);
+      const cameraWorldPosition = new THREE.Vector3();
+      camera.object3D.getWorldPosition(cameraWorldPosition);
+
+      // Устанавливаем луч
+      raycaster.set(cameraWorldPosition, cameraWorldDirection);
+
+      // Проверяем пересечение с объектами
+      const intersects = raycaster.intersectObjects(scene.object3D.children, true);
+
+      if (intersects.length > 0) {
+        const intersectedObject = intersects[0].object.el; // Получаем A-Frame элемент
+        if (intersectedObject.tagName === 'A-SPHERE') {
+          score++;
+          scoreText.setAttribute('value', `Score: ${score}`);
+
+          // Эффект частиц при исчезновении
+          const explosion = document.getElementById('explosion');
+          explosion.setAttribute('position', intersectedObject.getAttribute('position'));
+          explosion.setAttribute('particle-system', 'preset: explosion; color: yellow');
+          explosion.components['particle-system'].start();
+
+          // Удаляем сферу через небольшой промежуток времени
+          setTimeout(() => {
+            scene.removeChild(intersectedObject);
+          }, 100); // Задержка для отображения эффекта частиц
+        }
+      }
+    }
+
     // Запуск игры
     createSpheres();
     
     // Запуск таймера
     const timerInterval = setInterval(updateTimer, 1000);
+
+    // Проверка пересечения каждые 100 мс
+    setInterval(checkIntersection, 100);
     
   </script>
 </body>

@@ -38,7 +38,6 @@
       height="100">
     </a-plane>
 
-    <!-- Сферы будут добавлены динамически -->
     <!-- Счетчик очков -->
     <a-text 
       id="scoreText" 
@@ -82,23 +81,23 @@
         
         // Добавление обработчика столкновений
         sphere.setAttribute('dynamic-body', ''); // добавляем физику к сфере
-        sphere.addEventListener('collide', function (e) {
-          if (e.detail.body.el.tagName === 'A-ENTITY' && e.detail.body.el.hasAttribute('camera')) {
-            score++;
-            scoreText.setAttribute('value', `Score: ${score}`);
-            scene.removeChild(sphere); // удаляем сферу после сбора
-          }
-        });
-
-        // Добавление обработчика hover
-        sphere.addEventListener('mouseenter', function () {
-          score++;
-          scoreText.setAttribute('value', `Score: ${score}`);
-          scene.removeChild(sphere); // удаляем сферу после наведения
-        });
 
         scene.appendChild(sphere); // добавление сферы в сцену
       }
+    }
+
+    // Проверка пересечения прицела с сферами
+    function checkIntersections() {
+      const cursor = document.querySelector('[cursor]');
+      const intersectedElements = cursor.components.raycaster.intersections;
+
+      intersectedElements.forEach(intersection => {
+        if (intersection.object.el.tagName === 'A-SPHERE') {
+          score++;
+          scoreText.setAttribute('value', `Score: ${score}`);
+          scene.removeChild(intersection.object.el); // удаляем сферу после сбора
+        }
+      });
     }
 
     // Функция для обновления таймера
@@ -114,10 +113,12 @@
 
     // Запуск игры
     createSpheres();
-    
+
     // Запуск таймера
     const timerInterval = setInterval(updateTimer, 1000);
-    
+
+    // Проверка пересечений каждую секунду или по событию нажатия кнопки
+    setInterval(checkIntersections, 100); // проверка каждые 100 мс
   </script>
 </body>
 </html>

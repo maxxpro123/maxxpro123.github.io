@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>VR Mini Game with Pico Controllers</title>
+  <title>VR Mini Game</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <style>
     body { margin: 0; }
@@ -11,70 +11,54 @@
 </head>
 <body>
   <a-scene>
-    <!-- Игрок -->
-    <a-entity id="player" position="0 1.6 0">
-      <!-- Камера -->
-      <a-entity camera look-controls></a-entity>
+    <a-assets>
+      <img id="sky" src="sky.png">
+      <img id="ground" src="ground.jpg">
+    </a-assets>
 
-      <!-- Левый контроллер: перемещение -->
-      <a-entity 
-        pico-controls="hand: left" 
-        thumbstick-movement></a-entity>
+    <!-- Небо -->
+    <a-sky src="#sky"></a-sky>
 
-      <!-- Правый контроллер: взаимодействие через raycaster -->
-      <a-entity 
-        pico-controls="hand: right" 
-        raycaster="objects: .collectible; showLine: true;"></a-entity>
-    </a-entity>
-
-    <!-- Пример объектов для сбора -->
-    <a-entity class="collectible" geometry="primitive: sphere" material="color: #EF2D5E" position="-1 1 -3"></a-entity>
-    <a-entity class="collectible" geometry="primitive: sphere" material="color: #EF2D5E" position="1 1 -4"></a-entity>
-    <a-entity class="collectible" geometry="primitive: sphere" material="color: #EF2D5E" position="0 1 -5"></a-entity>
+    <!-- Камера и контроллер -->
+    <a-entity camera look-controls wasd-controls="acceleration:100" position="0 1.6 0"></a-entity>
 
     <!-- Пол -->
-    <a-plane position="0 0 -4" rotation="-90 0 0" width="100" height="100" color="#7BC8A4"></a-plane>
+    <a-plane src="#ground"
+      position="0 0 -4" 
+      rotation="-90 0 0" 
+      width="100" 
+      height="100">
+    </a-plane>
 
+    <!-- Объекты для сбора -->
+    <a-box 
+      position="-1 0.5 -3" 
+      rotation="0 45 45" 
+      color="#4CC3D9">
+    </a-box>
+
+    <!-- Сферы будут добавлены динамически -->
     <!-- Счетчик очков -->
-    <a-text id="scoreText" value="Score: 0" position="0 2 -5" color="black" align="center"></a-text>
+    <a-text 
+      id="scoreText" 
+      value="Score: 0" 
+      position="0 2.5 -5" 
+      color="black" 
+      align="center">
+    </a-text>
 
     <!-- Таймер -->
-    <a-text id="timerText" value="Time: 120" position="0 1.5 -5" color="black" align="center"></a-text>
-    
+    <a-text 
+      id="timerText" 
+      value="Time: 120" 
+      position="1.5 2.5 -5" 
+      color="black">
+    </a-text>
+
   </a-scene>
 
   <script>
-    // Компонент для перемещения с помощью джойстика
-    AFRAME.registerComponent('thumbstick-movement', {
-      init: function () {
-        this.el.addEventListener('thumbstickmoved', (evt) => {
-          const player = document.querySelector('#player').object3D;
-
-          // Получаем направление движения вперед
-          const direction = new THREE.Vector3();
-          player.getWorldDirection(direction);
-          direction.y = 0; // Игнорируем вертикальное движение
-          direction.normalize();
-
-          // Получаем направление движения вправо
-          const right = new THREE.Vector3();
-          player.getWorldDirection(right);
-          right.applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2); // Поворачиваем на 90 градусов
-          right.normalize();
-
-          // Рассчитываем движение вперед/назад и влево/вправо
-          const forwardMovement = direction.multiplyScalar(evt.detail.y * 0.1); // Скорость по оси Y джойстика
-          const rightMovement = right.multiplyScalar(evt.detail.x * 0.1); // Скорость по оси X джойстика
-
-          // Суммируем движения
-          const movement = forwardMovement.add(rightMovement);
-
-          // Применяем движение к позиции игрока
-          player.position.add(movement);
-        });
-      }
-    });
-
+    // Ваш JavaScript код для логики игры
     const numSpheres = 20; // количество сфер
     const scene = document.querySelector('a-scene');
 
@@ -82,43 +66,30 @@
     let timeLeft = 120; // время в секундах
     const scoreText = document.getElementById('scoreText');
     const timerText = document.getElementById('timerText');
-
-    const spheres = []; // массив для хранения сфер
-
     // Функция для создания сфер
     function createSpheres() {
       for (let i = 0; i < numSpheres; i++) {
         const sphere = document.createElement('a-sphere');
-        sphere.setAttribute('class', 'collectible'); // добавляем класс для распознавания
         sphere.setAttribute('radius', '0.5'); // радиус сферы
         sphere.setAttribute('color', '#EF2D5E'); // цвет сферы
-
+        
         // Генерация случайных координат
-        const x = (Math.random() - 0.5) * 50; // случайное значение от -25 до 25
-        const z = (Math.random() - 0.5) * -50; // случайное значение от -25 до -50
+        const x = (Math.random() - 0.5) * 100; // случайное значение от -50 до 50
+        const z = (Math.random() - 0.5) * -100; // случайное значение от -50 до 0
         sphere.setAttribute('position', `${x} 1.25 ${z}`);
-
+        
+        // Добавление обработчика столкновений
+        sphere.setAttribute('dynamic-body', ''); // добавляем физику к сфере
+        sphere.addEventListener('collide', function (e) {
+          if (e.detail.body.el.tagName === 'A-ENTITY' && e.detail.body.el.hasAttribute('camera')) {
+            score++;
+            scoreText.setAttribute('value', `Score: ${score}`);
+            scene.removeChild(sphere); // удаляем сферу после сбора
+          }
+        });
         scene.appendChild(sphere); // добавление сферы в сцену
-        spheres.push(sphere); // добавляем сферу в массив
       }
     }
-
-    // Функция для проверки подбора сфер через контроллеры
-    function checkPickup(controller) {
-      const controllerEl = document.querySelector(controller);
-      if (!controllerEl.components.raycaster) return;
-
-      const intersectedEl = controllerEl.components.raycaster.intersections[0];
-
-      if (intersectedEl && intersectedEl.object.el.classList.contains('collectible')) {
-        const sphere = intersectedEl.object.el;
-        score++;
-        scoreText.setAttribute('value', `Score: ${score}`);
-        scene.removeChild(sphere); // удаляем сферу из сцены
-        spheres.splice(spheres.indexOf(sphere), 1); // удаляем сферу из массива
-      }
-    }
-
     // Функция для обновления таймера
     function updateTimer() {
       if (timeLeft > 0) {
@@ -129,18 +100,9 @@
         alert("Время вышло! Игра окончена.");
       }
     }
-
     // Запуск игры
     createSpheres();
-
-    // Обновление логики игры каждый кадр
-    scene.addEventListener('tick', () => {
-      checkPickup('#left-controller');
-      checkPickup('#right-controller');
-      
-      // Логика перемещения уже обрабатывается в компоненте thumbstick-movement.
-    });
-
+    
     // Запуск таймера
     const timerInterval = setInterval(updateTimer, 1000);
     

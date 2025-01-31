@@ -91,12 +91,12 @@
         smallSphere.setAttribute('radius', '0.1'); // радиус маленькой сферы
         smallSphere.setAttribute('color', '#EF2D5E'); // цвет маленькой сферы
         
-        // Генерация случайного направления и скорости
-        const angle = Math.random() * Math.PI * 2;
-        const speedX = Math.cos(angle) * (Math.random() * 2 + 1);
-        const speedZ = Math.sin(angle) * (Math.random() * 2 + 1);
+        smallSphere.setAttribute('position', position); // Позиция маленькой сферы равна позиции большой сферы
         
-        smallSphere.setAttribute('position', position);
+        // Генерация случайного направления для разлета
+        const angle = Math.random() * Math.PI * 2;
+        const speedX = Math.cos(angle) * (Math.random() * 3 + 1); // скорость по оси X
+        const speedZ = Math.sin(angle) * (Math.random() * 3 + 1); // скорость по оси Z
         
         // Анимация движения маленькой сферы
         smallSphere.setAttribute('animation', `property: position; to: ${position[0] + speedX} ${position[1]} ${position[2] + speedZ}; dur: ${Math.random() * 1000 + 500}; easing: easeInQuad;`);

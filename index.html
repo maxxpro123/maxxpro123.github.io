@@ -5,6 +5,7 @@
   <title>VR Mini Game</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
   <style>
     body { margin: 0; }
     a-scene { width: 100%; height: 100%; }
@@ -35,7 +36,8 @@
       position="0 0 -4" 
       rotation="-90 0 0" 
       width="100" 
-      height="100">
+      height="100"
+      static-body>
     </a-plane>
 
     <!-- Счетчик очков -->
@@ -55,10 +57,13 @@
       color="black">
     </a-text>
 
+    <!-- Эффект частиц для исчезновения -->
+    <a-entity id="explosion" particle-system="preset: explosion; color: yellow"></a-entity>
+
   </a-scene>
 
   <script>
-    <!-- JavaScript код для логики игры -->
+    // JavaScript код для логики игры
     const numSpheres = 20; // количество сфер
     const scene = document.querySelector('a-scene');
 
@@ -67,40 +72,43 @@
     const scoreText = document.getElementById('scoreText');
     const timerText = document.getElementById('timerText');
 
-    <!-- Функция для создания сфер -->
+    // Функция для создания сфер
     function createSpheres() {
       for (let i = 0; i < numSpheres; i++) {
         const sphere = document.createElement('a-sphere');
         sphere.setAttribute('radius', '0.5'); // радиус сферы
         sphere.setAttribute('color', '#EF2D5E'); // цвет сферы
         
-        <!-- Генерация случайных координат -->
+        // Генерация случайных координат
         const x = (Math.random() - 0.5) * 100; // случайное значение от -50 до 50
         const z = (Math.random() - 0.5) * -100; // случайное значение от -50 до 0
         sphere.setAttribute('position', `${x} 1.25 ${z}`);
         
-        <!-- Добавление обработчика столкновений -->
-        sphere.setAttribute('dynamic-body', ''); // добавляем физику к сфере
-        sphere.addEventListener('collide', function (e) {
-          if (e.detail.body.el.tagName === 'A-ENTITY' && e.detail.body.el.hasAttribute('camera')) {
-            score++;
-            scoreText.setAttribute('value', `Score: ${score}`);
-            scene.removeChild(sphere); // удаляем сферу после сбора
-          }
-        });
+        // Добавление физики к сфере
+        sphere.setAttribute('dynamic-body', '');
 
-        <!-- Добавление обработчика hover -->
+        // Добавление обработчика hover
         sphere.addEventListener('mouseenter', function () {
           score++;
           scoreText.setAttribute('value', `Score: ${score}`);
-          scene.removeChild(sphere); // удаляем сферу после наведения
+
+          // Эффект частиц при исчезновении
+          const explosion = document.getElementById('explosion');
+          explosion.setAttribute('position', sphere.getAttribute('position'));
+          explosion.setAttribute('particle-system', 'preset: explosion; color: yellow');
+          explosion.components['particle-system'].start();
+
+          // Удаляем сферу через небольшой промежуток времени
+          setTimeout(() => {
+            scene.removeChild(sphere);
+          }, 100); // Задержка для отображения эффекта частиц
         });
 
         scene.appendChild(sphere); // добавление сферы в сцену
       }
     }
 
-    <!-- Функция для обновления таймера -->
+    // Функция для обновления таймера
     function updateTimer() {
       if (timeLeft > 0) {
         timeLeft--;
@@ -111,10 +119,10 @@
       }
     }
 
-    <!-- Запуск игры -->
+    // Запуск игры
     createSpheres();
     
-    <!-- Запуск таймера -->
+    // Запуск таймера
     const timerInterval = setInterval(updateTimer, 1000);
     
   </script>

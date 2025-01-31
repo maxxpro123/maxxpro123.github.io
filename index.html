@@ -20,10 +20,15 @@
     <!-- Небо -->
     <a-sky src="#sky"></a-sky>
 
-    <!-- Камера и контроллеры -->
-    <a-entity camera look-controls wasd-controls="acceleration:100" position="0 1.6 0"></a-entity>
-    <a-entity id="left-hand" laser-controls="hand: left" movable></a-entity>
-    <a-entity id="right-hand" laser-controls="hand: right" movable></a-entity>
+    <!-- Камера и курсор -->
+    <a-entity camera look-controls wasd-controls="acceleration:100" position="0 1.6 0">
+      <a-entity cursor="rayOrigin: mouse"
+                raycaster="objects: a-sphere"
+                position="0 0 -1"
+                geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                material="color: black; shader: flat">
+      </a-entity>
+    </a-entity>
 
     <!-- Пол -->
     <a-plane src="#ground"
@@ -91,6 +96,14 @@
             scene.removeChild(sphere); // удаляем сферу после сбора
           }
         });
+
+        // Добавление обработчика hover
+        sphere.addEventListener('mouseenter', function () {
+          score++;
+          scoreText.setAttribute('value', `Score: ${score}`);
+          scene.removeChild(sphere); // удаляем сферу после наведения
+        });
+
         scene.appendChild(sphere); // добавление сферы в сцену
       }
     }
@@ -105,42 +118,6 @@
         alert("Время вышло! Игра окончена.");
       }
     }
-
-    // Компонент для перемещения объектов
-    AFRAME.registerComponent('movable', {
-      init: function () {
-        this.grabbed = false;
-        this.grabbedObject = null;
-
-        // Обработка события захвата
-        this.el.addEventListener('gripdown', (evt) => {
-          if (!this.grabbed) {
-            const intersectedElement = this.el.components['laser-controls'].intersectedEl;
-            if (intersectedElement && intersectedElement.tagName === 'A-SPHERE') {
-              this.grabbed = true;
-              this.grabbedObject = intersectedElement;
-              this.grabbedObject.setAttribute('dynamic-body', {type: 'kinematic'});
-            }
-          }
-        });
-
-        // Обработка события отпускания
-        this.el.addEventListener('gripup', (evt) => {
-          if (this.grabbed) {
-            this.grabbed = false;
-            this.grabbedObject.setAttribute('dynamic-body', 'type', 'dynamic');
-            this.grabbedObject = null;
-          }
-        });
-      },
-
-      tick: function () {
-        if (this.grabbed && this.grabbedObject) {
-          const controllerPosition = this.el.object3D.position;
-          this.grabbedObject.setAttribute('position', controllerPosition);
-        }
-      }
-    });
 
     // Запуск игры
     createSpheres();

@@ -38,14 +38,6 @@
       height="100">
     </a-plane>
 
-    <!-- Объекты для сбора -->
-    <a-box 
-      position="-1 0.5 -3" 
-      rotation="0 45 45" 
-      color="#4CC3D9">
-    </a-box>
-
-    <!-- Сферы будут добавлены динамически -->
     <!-- Счетчик очков -->
     <a-text 
       id="scoreText" 
@@ -66,7 +58,7 @@
   </a-scene>
 
   <script>
-    // Ваш JavaScript код для логики игры
+    <!-- JavaScript код для логики игры -->
     const numSpheres = 20; // количество сфер
     const scene = document.querySelector('a-scene');
 
@@ -75,19 +67,19 @@
     const scoreText = document.getElementById('scoreText');
     const timerText = document.getElementById('timerText');
 
-    // Функция для создания сфер
+    <!-- Функция для создания сфер -->
     function createSpheres() {
       for (let i = 0; i < numSpheres; i++) {
         const sphere = document.createElement('a-sphere');
         sphere.setAttribute('radius', '0.5'); // радиус сферы
         sphere.setAttribute('color', '#EF2D5E'); // цвет сферы
         
-        // Генерация случайных координат
+        <!-- Генерация случайных координат -->
         const x = (Math.random() - 0.5) * 100; // случайное значение от -50 до 50
         const z = (Math.random() - 0.5) * -100; // случайное значение от -50 до 0
         sphere.setAttribute('position', `${x} 1.25 ${z}`);
         
-        // Добавление обработчика столкновений
+        <!-- Добавление обработчика столкновений -->
         sphere.setAttribute('dynamic-body', ''); // добавляем физику к сфере
         sphere.addEventListener('collide', function (e) {
           if (e.detail.body.el.tagName === 'A-ENTITY' && e.detail.body.el.hasAttribute('camera')) {
@@ -97,7 +89,7 @@
           }
         });
 
-        // Добавление обработчика hover
+        <!-- Добавление обработчика hover -->
         sphere.addEventListener('mouseenter', function () {
           score++;
           scoreText.setAttribute('value', `Score: ${score}`);
@@ -108,7 +100,7 @@
       }
     }
 
-    // Функция для обновления таймера
+    <!-- Функция для обновления таймера -->
     function updateTimer() {
       if (timeLeft > 0) {
         timeLeft--;
@@ -119,10 +111,10 @@
       }
     }
 
-    // Запуск игры
+    <!-- Запуск игры -->
     createSpheres();
     
-    // Запуск таймера
+    <!-- Запуск таймера -->
     const timerInterval = setInterval(updateTimer, 1000);
     
   </script>

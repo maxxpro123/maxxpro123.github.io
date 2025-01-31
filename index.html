@@ -102,37 +102,28 @@
     // Функция для проверки пересечения луча с объектами
     function checkIntersection() {
       const camera = document.getElementById('camera');
-      const raycaster = new THREE.Raycaster();
-      const direction = new THREE.Vector3(0, 0, -1); // Направление луча (вперед из камеры)
+      const raycaster = camera.components.raycaster;
 
-      // Получаем позицию и направление камеры
-      const cameraWorldDirection = new THREE.Vector3();
-      camera.object3D.getWorldDirection(cameraWorldDirection);
-      const cameraWorldPosition = new THREE.Vector3();
-      camera.object3D.getWorldPosition(cameraWorldPosition);
+      if (raycaster) {
+        const intersections = raycaster.intersectedEls;
 
-      // Устанавливаем луч
-      raycaster.set(cameraWorldPosition, cameraWorldDirection);
+        if (intersections.length > 0) {
+          const intersectedObject = intersections[0]; // Получаем первый пересеченный объект
+          if (intersectedObject.tagName === 'A-SPHERE') {
+            score++;
+            scoreText.setAttribute('value', `Score: ${score}`);
 
-      // Проверяем пересечение с объектами
-      const intersects = raycaster.intersectObjects(scene.object3D.children, true);
+            // Эффект частиц при исчезновении
+            const explosion = document.getElementById('explosion');
+            explosion.setAttribute('position', intersectedObject.getAttribute('position'));
+            explosion.setAttribute('particle-system', 'preset: explosion; color: yellow');
+            explosion.components['particle-system'].start();
 
-      if (intersects.length > 0) {
-        const intersectedObject = intersects[0].object.el; // Получаем A-Frame элемент
-        if (intersectedObject.tagName === 'A-SPHERE') {
-          score++;
-          scoreText.setAttribute('value', `Score: ${score}`);
-
-          // Эффект частиц при исчезновении
-          const explosion = document.getElementById('explosion');
-          explosion.setAttribute('position', intersectedObject.getAttribute('position'));
-          explosion.setAttribute('particle-system', 'preset: explosion; color: yellow');
-          explosion.components['particle-system'].start();
-
-          // Удаляем сферу через небольшой промежуток времени
-          setTimeout(() => {
-            scene.removeChild(intersectedObject);
-          }, 100); // Задержка для отображения эффекта частиц
+            // Удаляем сферу через небольшой промежуток времени
+            setTimeout(() => {
+              scene.removeChild(intersectedObject);
+            }, 100); // Задержка для отображения эффекта частиц
+          }
         }
       }
     }
@@ -142,6 +133,13 @@
     
     // Запуск таймера
     const timerInterval = setInterval(updateTimer, 1000);
+
+    // Добавляем raycaster к камере
+    const camera = document.getElementById('camera');
+    camera.setAttribute('raycaster', {
+      objects: 'a-sphere', // Указываем, что луч должен пересекать только сферы
+      far: 100, // Максимальная дальность луча
+    });
 
     // Проверка пересечения каждые 100 мс
     setInterval(checkIntersection, 100);

@@ -20,13 +20,15 @@
     <!-- Небо -->
     <a-sky src="#sky"></a-sky>
 
-    <!-- Камера и курсор -->
+    <!-- Камера и прицел -->
     <a-entity camera look-controls wasd-controls="acceleration:100" position="0 1.6 0">
-      <a-entity cursor="rayOrigin: mouse"
-                raycaster="objects: a-sphere"
-                position="0 0 -1"
-                geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-                material="color: black; shader: flat">
+      <!-- Прицел -->
+      <a-entity 
+        cursor="rayOrigin: entity" 
+        raycaster="objects: a-sphere; far: 100" 
+        position="0 0 -1"
+        geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+        material="color: black; shader: flat">
       </a-entity>
     </a-entity>
 
@@ -58,8 +60,8 @@
   </a-scene>
 
   <script>
-    // Ваш JavaScript код для логики игры
-    const numSpheres = 20; // количество сфер
+    // Количество сфер
+    const numSpheres = 20;
     const scene = document.querySelector('a-scene');
 
     let score = 0;
@@ -75,13 +77,10 @@
         sphere.setAttribute('color', '#EF2D5E'); // цвет сферы
         
         // Генерация случайных координат
-        const x = (Math.random() - 0.5) * 100; // случайное значение от -50 до 50
-        const z = (Math.random() - 0.5) * -100; // случайное значение от -50 до 0
+        const x = (Math.random() - 0.5) * 20; // случайное значение от -10 до 10
+        const z = (Math.random() - 0.5) * -20; // случайное значение от -10 до -20
         sphere.setAttribute('position', `${x} 1.25 ${z}`);
         
-        // Добавление обработчика столкновений
-        sphere.setAttribute('dynamic-body', ''); // добавляем физику к сфере
-
         scene.appendChild(sphere); // добавление сферы в сцену
       }
     }
@@ -95,7 +94,7 @@
         if (intersection.object.el.tagName === 'A-SPHERE') {
           score++;
           scoreText.setAttribute('value', `Score: ${score}`);
-          scene.removeChild(intersection.object.el); // удаляем сферу после сбора
+          scene.removeChild(intersection.object.el); // удаляем сферу после попадания
         }
       });
     }
@@ -117,8 +116,8 @@
     // Запуск таймера
     const timerInterval = setInterval(updateTimer, 1000);
 
-    // Проверка пересечений каждую секунду или по событию нажатия кнопки
-    setInterval(checkIntersections, 100); // проверка каждые 100 мс
+    // Проверка пересечений каждые 100 мс
+    setInterval(checkIntersections, 100);
   </script>
 </body>
 </html>

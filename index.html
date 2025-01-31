@@ -5,7 +5,6 @@
   <title>VR Mini Game</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
   <style>
     body { margin: 0; }
     a-scene { width: 100%; height: 100%; }
@@ -21,11 +20,14 @@
     <!-- Небо -->
     <a-sky src="#sky"></a-sky>
 
-    <!-- Камера -->
-    <a-entity id="camera" camera look-controls wasd-controls="acceleration:100" position="0 1.6 0">
-      <!-- Прицел в центре экрана -->
-      <a-entity position="0 0 -1" geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
-                material="color: black; shader: flat"></a-entity>
+    <!-- Камера и курсор -->
+    <a-entity camera look-controls wasd-controls="acceleration:100" position="0 1.6 0">
+      <a-entity cursor="rayOrigin: mouse"
+                raycaster="objects: a-sphere"
+                position="0 0 -1"
+                geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                material="color: black; shader: flat">
+      </a-entity>
     </a-entity>
 
     <!-- Пол -->
@@ -33,10 +35,17 @@
       position="0 0 -4" 
       rotation="-90 0 0" 
       width="100" 
-      height="100"
-      static-body>
+      height="100">
     </a-plane>
 
+    <!-- Объекты для сбора -->
+    <a-box 
+      position="-1 0.5 -3" 
+      rotation="0 45 45" 
+      color="#4CC3D9">
+    </a-box>
+
+    <!-- Сферы будут добавлены динамически -->
     <!-- Счетчик очков -->
     <a-text 
       id="scoreText" 
@@ -54,13 +63,10 @@
       color="black">
     </a-text>
 
-    <!-- Эффект частиц для исчезновения -->
-    <a-entity id="explosion" particle-system="preset: explosion; color: yellow"></a-entity>
-
   </a-scene>
 
   <script>
-    // JavaScript код для логики игры
+    // Ваш JavaScript код для логики игры
     const numSpheres = 20; // количество сфер
     const scene = document.querySelector('a-scene');
 
@@ -81,8 +87,22 @@
         const z = (Math.random() - 0.5) * -100; // случайное значение от -50 до 0
         sphere.setAttribute('position', `${x} 1.25 ${z}`);
         
-        // Добавление физики к сфере
-        sphere.setAttribute('dynamic-body', '');
+        // Добавление обработчика столкновений
+        sphere.setAttribute('dynamic-body', ''); // добавляем физику к сфере
+        sphere.addEventListener('collide', function (e) {
+          if (e.detail.body.el.tagName === 'A-ENTITY' && e.detail.body.el.hasAttribute('camera')) {
+            score++;
+            scoreText.setAttribute('value', `Score: ${score}`);
+            scene.removeChild(sphere); // удаляем сферу после сбора
+          }
+        });
+
+        // Добавление обработчика hover
+        sphere.addEventListener('mouseenter', function () {
+          score++;
+          scoreText.setAttribute('value', `Score: ${score}`);
+          scene.removeChild(sphere); // удаляем сферу после наведения
+        });
 
         scene.appendChild(sphere); // добавление сферы в сцену
       }
@@ -99,50 +119,11 @@
       }
     }
 
-    // Функция для проверки пересечения луча с объектами
-    function checkIntersection() {
-      const camera = document.getElementById('camera');
-      const raycaster = camera.components.raycaster;
-
-      if (raycaster) {
-        const intersections = raycaster.intersectedEls;
-
-        if (intersections.length > 0) {
-          const intersectedObject = intersections[0]; // Получаем первый пересеченный объект
-          if (intersectedObject.tagName === 'A-SPHERE') {
-            score++;
-            scoreText.setAttribute('value', `Score: ${score}`);
-
-            // Эффект частиц при исчезновении
-            const explosion = document.getElementById('explosion');
-            explosion.setAttribute('position', intersectedObject.getAttribute('position'));
-            explosion.setAttribute('particle-system', 'preset: explosion; color: yellow');
-            explosion.components['particle-system'].start();
-
-            // Удаляем сферу через небольшой промежуток времени
-            setTimeout(() => {
-              scene.removeChild(intersectedObject);
-            }, 100); // Задержка для отображения эффекта частиц
-          }
-        }
-      }
-    }
-
     // Запуск игры
     createSpheres();
     
     // Запуск таймера
     const timerInterval = setInterval(updateTimer, 1000);
-
-    // Добавляем raycaster к камере
-    const camera = document.getElementById('camera');
-    camera.setAttribute('raycaster', {
-      objects: 'a-sphere', // Указываем, что луч должен пересекать только сферы
-      far: 100, // Максимальная дальность луча
-    });
-
-    // Проверка пересечения каждые 100 мс
-    setInterval(checkIntersection, 100);
     
   </script>
 </body>
